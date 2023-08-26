@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stock Quotes and Graphs</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Stock Quotes and Graphs</h1>
+  <label for="symbol">Stock Symbol: </label>
+  <input type="text" id="symbol" placeholder="AAPL">
+  <label for="range">Time Range: </label>
+  <select id="range">
+    <option value="30">1 Month</option>
+    <option value="90">3 Months</option>
+    <option value="180">6 Months</option>
+  </select>
+  <button onclick="fetchAndGraph()">Fetch and Graph</button>
+  <canvas id="stockChart"></canvas>
+
+  <script>
+    async function fetchAndGraph() {
+      const apiKey = '';
+      const symbol = document.getElementById('symbol').value;
+      const range = document.getElementById('range').value;
+
+      const response = await axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`);
+      const data = response.data['Time Series (Daily)'];
+
+      const labels = [];
+      const prices = [];
+
+      for (let date in data) {
+        labels.push(date);
+        prices.push(parseFloat(data[date]['4. close']));
+      }
+
+      labels.reverse();
+      prices.reverse();
+
+      const ctx = document.getElementById('stockChart').getContext('2d');
+      const stockChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels.slice(0, range),
+          datasets: [{
+            label: `${symbol} Stock Price`,
+            data: prices.slice(0, range),
+            borderColor: 'blue',
+            borderWidth: 1,
+            fill: false
+          }]
+        }
+      });
+    }
+  </script>
+</body>
+</html>
