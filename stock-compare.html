@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Stock Quotes and Graphs</title>
+  <title>Stock Compare</title>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <h1>Stock Quotes and Graphs</h1>
+  <p>Compare the performance of stocks over time. All prices are normalized, with the first day shown being translated to a price of 100.</p>
   <label for="symbols">Stock Symbols (comma-separated): </label>
-  <input type="text" id="symbols" placeholder="AAPL, MSFT">
+  <input type="text" id="symbols" placeholder="AAPL, SPY">
   <label for="range">Time Range: </label>
   <select id="range">
     <option value="30">1 Month</option>
     <option value="90">3 Months</option>
     <option value="180">6 Months</option>
-    <option value="365">12 Months</option>
+    <option value="365" selected>12 Months</option>
     <option value="730">24 Months</option>
     <option value="1826">60 Months</option>
   </select>
