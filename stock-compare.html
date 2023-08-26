@@ -7,11 +7,6 @@
 </head>
 <body>
   <h1>Stock Quotes and Graphs</h1>
-  <form id="apiKeyForm">
-    <label for="apiKey">API Key: </label>
-    <input type="text" id="apiKey" placeholder="Your Alpha Vantage API Key">
-    <button type="button" onclick="saveApiKey()">Save API Key</button>
-  </form>
   <label for="symbols">Stock Symbols (comma-separated): </label>
   <input type="text" id="symbols" placeholder="AAPL, MSFT">
   <label for="range">Time Range: </label>
@@ -25,6 +20,11 @@
   </select>
   <button onclick="fetchAndGraph()">Fetch and Graph</button>
   <canvas id="stockChart"></canvas>
+  <form id="apiKeyForm">
+    <label for="apiKey">API Key: </label>
+    <input type="text" id="apiKey" placeholder="Your Alpha Vantage API Key">
+    <button type="button" onclick="saveApiKey()">Save API Key</button>
+  </form>
 
   <script>
     function saveApiKey() {
