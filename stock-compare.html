@@ -67,18 +67,16 @@
       });
 
       for (const symbol of symbols) {
-        const response = await axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`);
+        const response = await axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}&outputsize=full`);
         const data = response.data['Time Series (Daily)'];
 
         const labels = [];
         const prices = [];
 
         for (let date in data) {
-          if (daysAgo(new Date(date)) < (range + 1)) {
-            // TODO if we iterate the right way, we should be able to break as soon as we see one old date
-            labels.push(date);
-            prices.push(parseFloat(data[date]['4. close']));
-          }
+          labels.push(date);
+          prices.push(parseFloat(data[date]['4. close']));
+          if (daysAgo(new Date(date)) > (range + 1)) break;
         }
 
         labels.reverse();
@@ -105,6 +103,16 @@
       }
       return color;
     }
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+    window.onload = function() {
+      const urlQuotes = getQueryParam('quotes');
+      if (urlQuotes) {
+        document.getElementById('symbols').value = urlQuotes;
+      }
+    };
   </script>
 </body>
 </html>
