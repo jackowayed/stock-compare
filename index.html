@@ -21,29 +21,8 @@
   </select>
   <button onclick="fetchAndGraph()">Fetch and Graph</button>
   <canvas id="stockChart"></canvas>
-  <form id="apiKeyForm">
-    <label for="apiKey">API Key: </label>
-    <input type="text" id="apiKey" placeholder="Your Alpha Vantage API Key">
-    <button type="button" onclick="saveApiKey()">Save API Key</button>
-  </form>
 
   <script>
-    function saveApiKey() {
-      const apiKeyInput = document.getElementById('apiKey');
-      const apiKey = apiKeyInput.value;
-      if (apiKey.trim() !== '') {
-        localStorage.setItem('alphaVantageApiKey', apiKey);
-        apiKeyInput.value = '';
-        alert('API Key saved successfully!');
-      } else {
-        alert('Please provide a valid API Key.');
-      }
-    }
-
-    function getSavedApiKey() {
-      return localStorage.getItem('alphaVantageApiKey');
-    }
-
     function daysAgo(date) {
       const now = new Date();
       const diff = now - date;
@@ -59,12 +38,6 @@
     }
 
     async function fetchAndGraph() {
-      const apiKey = getSavedApiKey();
-      if (!apiKey) {
-        alert('Please save your API Key first.');
-        return;
-      }
-
       const symbols = document.getElementById('symbols').value.split(',').map(symbol => symbol.trim());
       const range = parseInt(document.getElementById('range').value);
 
@@ -78,7 +51,7 @@
       });
 
       for (const symbol of symbols) {
-        const response = await axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}&outputsize=full`);
+        const response = await axios.get(`/api/quote-timeseries?symbol=${symbol}`);
         const data = response.data['Time Series (Daily)'];
 
         const labels = [];
