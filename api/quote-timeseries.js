@@ -1,5 +1,5 @@
 export default async function handler(request, response) {
-  const { symbol } = req.query;
+  const { symbol } = request.query;
   const API_KEY = process.env.ALPHA_VANTAGE_KEY;
   try {
     const response = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_KEY}`);
