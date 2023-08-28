@@ -7,6 +7,6 @@ export default async function handler(request, response) {
     response.status(200).json(data);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'An error occurred' });
+    response.status(500).json({ error: 'An error occurred' });
   }
 }
