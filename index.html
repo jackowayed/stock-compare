@@ -37,12 +37,25 @@
       }
     }
 
+    const fetchCache = new Map();
+    async function cachedFetch(symbol) {
+      if (!fetchCache.has(symbol)) {
+        const response = await axios.get(`/api/quote-timeseries?symbol=${symbol}`);
+        fetchCache.set(symbol, response.data['Time Series (Daily)']);
+      }
+      return fetchCache.get(symbol);
+    }
+
+    let stockChart;
     async function fetchAndGraph() {
       const symbols = document.getElementById('symbols').value.split(',').map(symbol => symbol.trim());
       const range = parseInt(document.getElementById('range').value);
 
+      if (stockChart) {
+        stockChart.destroy();
+      }
       const ctx = document.getElementById('stockChart').getContext('2d');
-      const stockChart = new Chart(ctx, {
+      stockChart = new Chart(ctx, {
         type: 'line',
         data: {
           labels: [],
@@ -51,9 +64,7 @@
       });
 
       for (const symbol of symbols) {
-        const response = await axios.get(`/api/quote-timeseries?symbol=${symbol}`);
-        const data = response.data['Time Series (Daily)'];
-
+        const data = await cachedFetch(symbol)
         const labels = [];
         const prices = [];
 
