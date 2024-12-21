@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Stock Compare</title>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
   <h1>Stock Quotes and Graphs</h1>
-  <p>Compare the performance of stocks over time. All prices are normalized, with the first day shown being translated to a price of 100.</p>
+  <p>Compare the performance of stocks over time. All prices are normalized, with the first day shown being translated
+    to a price of 100.</p>
   <form id="form">
     <label for="symbols">Stock Symbols (comma-separated): </label>
     <input type="text" id="symbols" placeholder="AAPL, SPY" autofocus>
@@ -48,6 +51,21 @@
       return fetchCache.get(symbol);
     }
 
+    async function extractPrices(apiData, range) {
+      const labels = [];
+      const prices = [];
+
+      for (let date in apiData) {
+        labels.push(date);
+        prices.push(parseFloat(data[date]['4. close']));
+        if (daysAgo(new Date(date)) > (range + 1)) break;
+      }
+
+      labels.reverse();
+      prices.reverse();
+      return [prices, labels];
+    }
+
     let stockChart;
     async function fetchAndGraph() {
       const symbols = document.getElementById('symbols').value.split(',').map(symbol => symbol.trim());
@@ -67,17 +85,9 @@
 
       for (const symbol of symbols) {
         const data = await cachedFetch(symbol)
-        const labels = [];
-        const prices = [];
-
-        for (let date in data) {
-          labels.push(date);
-          prices.push(parseFloat(data[date]['4. close']));
-          if (daysAgo(new Date(date)) > (range + 1)) break;
-        }
-
-        labels.reverse();
-        prices.reverse();
+        const r = extractPrices(data, range);
+        const prices = r[0];
+        const labels = r[1];
         normalize(prices);
 
         stockChart.data.labels = labels;
@@ -95,7 +105,7 @@
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
     }
-    window.onload = function() {
+    window.onload = function () {
       document.getElementById("form").addEventListener("submit", event => {
         event.preventDefault();
         fetchAndGraph();
@@ -107,4 +117,5 @@
     };
   </script>
 </body>
+
 </html>
