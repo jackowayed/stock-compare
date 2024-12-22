@@ -9,8 +9,10 @@
 
 <body>
   <h1>Stock Quotes and Graphs</h1>
-  <p>Compare the performance of stocks over time. All prices are normalized, with the first day shown being translated
-    to a price of 100.</p>
+  <p>Compare the performance of stocks over time.</p>
+  <p>If you comma separate single securities, eg. <code>SPY,QQQ</code>, all prices are normalized, with the first day
+    shown being translated to a price of 100.</p>
+  <p>If you type a ratio eg. <code>SPY/QQQ</code>, we do not normalize.</p>
   <form id="form">
     <label for="symbols">Stock Symbols (comma-separated): </label>
     <input type="text" id="symbols" placeholder="AAPL, SPY" autofocus>
@@ -21,6 +23,7 @@
       <option value="180">6 Months</option>
       <option value="365" selected>12 Months</option>
       <option value="730">24 Months</option>
+      <option value="1096">36 Months</option>
       <option value="1826">60 Months</option>
     </select>
     <input type="submit">Fetch and Graph</button>
@@ -57,13 +60,13 @@
 
       for (let date in apiData) {
         labels.push(date);
-        prices.push(parseFloat(data[date]['4. close']));
+        prices.push(parseFloat(apiData[date]['4. close']));
         if (daysAgo(new Date(date)) > (range + 1)) break;
       }
 
       labels.reverse();
       prices.reverse();
-      return [prices, labels];
+      return { prices, labels };
     }
 
     let stockChart;
@@ -84,12 +87,35 @@
       });
 
       for (const symbol of symbols) {
-        const data = await cachedFetch(symbol)
-        const r = extractPrices(data, range);
-        const prices = r[0];
-        const labels = r[1];
-        normalize(prices);
-
+        let ratio = false;
+        let numerator;
+        let denominator;
+        if (symbol.indexOf("/") != -1) {
+          let parts = symbol.split("/");
+          console.assert(parts.length == 2, "only one / per series")
+          ratio = true;
+          numerator = parts[0];
+          denominator = parts[1];
+        }
+        let prices;
+        let labels;
+        if (ratio) {
+          const numerData = await cachedFetch(numerator);
+          let numerPrices;
+          ({ prices: numerPrices, labels } = await extractPrices(numerData, range));
+          const denomData = await cachedFetch(denominator);
+          let denomPrices;
+          ({ prices: denomPrices, labels } = await extractPrices(denomData, range));
+          console.assert(numerPrices.length === denomPrices.length);
+          prices = []
+          for (let i = 0; i < denomPrices.length; i++) {
+            prices.push(numerPrices[i] / denomPrices[i]);
+          }
+        } else {
+          const data = await cachedFetch(symbol);
+          ({ prices, labels } = await extractPrices(data, range));
+          normalize(prices);
+        }
         stockChart.data.labels = labels;
         stockChart.data.datasets.push({
           label: `${symbol} Stock Price`,
