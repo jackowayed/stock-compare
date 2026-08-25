@@ -1,0 +1,13 @@
+name = "stock-compare"
+main = "src/index.js"
+compatibility_date = "2024-09-25"
+
+# Static frontend served through the assets binding. The Worker (main) runs
+# first, handles /api/*, and delegates all other paths to env.ASSETS.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# ALPHA_VANTAGE_KEY is a secret — do NOT put it here. Set it with:
+#   wrangler secret put ALPHA_VANTAGE_KEY
+# (or in the Cloudflare dashboard under the Worker's Settings > Variables).
