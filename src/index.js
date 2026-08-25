@@ -3,7 +3,7 @@
 // Alpha Vantage API on /api/quote-timeseries, keeping the API key server-side
 // and caching upstream responses to stay under the free-tier rate limit.
 
-const CACHE_SECONDS = 60 * 60 * 6; // 6 hours; daily time series changes at most once a day.
+const CACHE_SECONDS = 60 * 60 * 12; // 12 hours; daily time series changes at most once a day.
 
 export default {
   async fetch(request, env, ctx) {
