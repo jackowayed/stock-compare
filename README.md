@@ -6,8 +6,8 @@ A small single-page app for comparing how securities move over time.
   compare performance regardless of share price (`AAPL, MSFT, SPY`).
 - **Ratios** — type `NUM/DEN` (e.g. `SPY/QQQ`) to chart one security against
   another.
-- **Adjustable time window** — 1W / 1M / 3M / 6M / 1Y / 5Y / Max, plus a
-  draggable zoom slider.
+- **Adjustable time window** — 1W / 1M / 3M / 6M / 1Y / 2Y / 3Y / 5Y / Max, plus
+  a draggable zoom slider.
 - Optional **log scale**, **dark mode**, per-series summary cards, and
   **shareable links** (state lives in the URL).
 - Works on phones and desktops.

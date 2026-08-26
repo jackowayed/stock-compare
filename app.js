@@ -16,6 +16,8 @@ const RANGES = [
   { key: '3M', label: '3M', days: 93 },
   { key: '6M', label: '6M', days: 186 },
   { key: '1Y', label: '1Y', days: 366 },
+  { key: '2Y', label: '2Y', days: 2 * 366 },
+  { key: '3Y', label: '3Y', days: 3 * 366 },
   { key: '5Y', label: '5Y', days: 5 * 366 },
   { key: 'MAX', label: 'Max', days: Infinity }, // full history (decades)
 ];
