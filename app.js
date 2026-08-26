@@ -21,7 +21,7 @@ const RANGES = [
   { key: '5Y', label: '5Y', days: 5 * 366 },
   { key: 'MAX', label: 'Max', days: Infinity }, // full history (decades)
 ];
-const DEFAULT_RANGE = 'MAX';
+const DEFAULT_RANGE = '1Y';
 
 const EXAMPLES = [
   'SPY, QQQ',
