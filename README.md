@@ -6,7 +6,8 @@ A small single-page app for comparing how securities move over time.
   compare performance regardless of share price (`AAPL, MSFT, SPY`).
 - **Ratios** — type `NUM/DEN` (e.g. `SPY/QQQ`) to chart one security against
   another.
-- **Adjustable time window** — 1W / 1M / 3M / Max, plus a draggable zoom slider.
+- **Adjustable time window** — 1W / 1M / 3M / 6M / 1Y / 5Y / Max, plus a
+  draggable zoom slider.
 - Optional **log scale**, **dark mode**, per-series summary cards, and
   **shareable links** (state lives in the URL).
 - Works on phones and desktops.
@@ -19,21 +20,27 @@ No build step — plain HTML/CSS/JS served statically, with
 - `index.html` — markup + CDN/script links
 - `styles.css` — responsive, theme-aware styles
 - `app.js` — data fetching, normalization, charting, URL sync
-- `api/quote-timeseries.js` — serverless proxy to Alpha Vantage (keeps the API
-  key server-side; maps Alpha Vantage's in-body errors to real HTTP statuses;
-  sets CDN cache headers to stretch the free-tier request budget)
+- `api/quote-timeseries.js` — serverless proxy to Yahoo Finance's v8 chart
+  endpoint (normalizes the response, maps errors to real HTTP statuses, sets CDN
+  cache headers, and sends a browser-like User-Agent so Yahoo doesn't 403)
 
 ## Data source
 
-Prices come from Alpha Vantage's `TIME_SERIES_DAILY` endpoint via the
-serverless proxy. Set `ALPHA_VANTAGE_KEY` in the environment (e.g. a Vercel
-project env var).
+Prices come from Yahoo Finance's `v8/finance/chart` endpoint via the serverless
+proxy, using daily **adjusted close** — adjusted for both splits and dividends,
+so the chart reflects **total return**, not just price return. No API key is
+required.
 
-> **Free-tier note:** the proxy uses `outputsize=compact`, which returns the
-> latest ~100 trading days (~5 months). `full` history is gated behind Alpha
-> Vantage's premium plan for this key, which is why the time-window options top
-> out at that range. Responses are cached per-symbol for the day in the browser
-> (localStorage) and at the CDN edge to stay under the daily request limit.
+> **Why Yahoo?** It needs no key and has no meaningful per-day request budget
+> (Alpha Vantage's free tier was 25 requests/day, and its adjusted-close
+> endpoint was paywalled). The proxy requests `range=max`, so "Max" is decades
+> of history rather than a few months. Responses are cached per-symbol for the
+> day in the browser (localStorage) and for 6h at the CDN edge.
+>
+> The chart endpoint is unofficial and could change; keeping it behind the
+> serverless proxy means a future swap to another provider (e.g. Tiingo) only
+> touches `api/quote-timeseries.js`, which already normalizes the response to
+> `{ symbol, currency, series: [["YYYY-MM-DD", value], ...] }`.
 
 ## Local development
 
@@ -45,7 +52,7 @@ npm i -g vercel
 vercel dev
 ```
 
-Then open the printed local URL. You'll need `ALPHA_VANTAGE_KEY` set (e.g. in a
-`.env` / Vercel project settings).
+Then open the printed local URL. No API key or environment variables are
+needed — the proxy talks to Yahoo Finance directly.
 
 Prices are shown for information only — not investment advice.

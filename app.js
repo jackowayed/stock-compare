@@ -1,8 +1,9 @@
 /* Stock Compare — normalize securities, chart ratios, adjust the time window.
  *
- * Data comes from /api/quote-timeseries (Alpha Vantage daily close, ~100
- * trading days on the free tier). No build step: plain modules-free ES,
- * ECharts for the chart, everything else vanilla.
+ * Data comes from /api/quote-timeseries (Yahoo Finance daily *adjusted* close —
+ * split- and dividend-adjusted, so this is total return, with decades of
+ * history). No build step: plain modules-free ES, ECharts for the chart,
+ * everything else vanilla.
  */
 
 'use strict';
@@ -13,7 +14,10 @@ const RANGES = [
   { key: '1W', label: '1W', days: 7 },
   { key: '1M', label: '1M', days: 31 },
   { key: '3M', label: '3M', days: 93 },
-  { key: 'MAX', label: 'Max', days: Infinity }, // ~5 months on the free tier
+  { key: '6M', label: '6M', days: 186 },
+  { key: '1Y', label: '1Y', days: 366 },
+  { key: '5Y', label: '5Y', days: 5 * 366 },
+  { key: 'MAX', label: 'Max', days: Infinity }, // full history (decades)
 ];
 const DEFAULT_RANGE = 'MAX';
 
@@ -130,7 +134,7 @@ const memCache = new Map();
 
 function readDayCache(symbol) {
   try {
-    const rawStr = localStorage.getItem(STORE_PREFIX + 'av:' + symbol);
+    const rawStr = localStorage.getItem(STORE_PREFIX + 'adj:' + symbol);
     if (!rawStr) return null;
     const parsed = JSON.parse(rawStr);
     if (parsed.day !== todayStr() || !Array.isArray(parsed.series)) return null;
@@ -142,7 +146,7 @@ function readDayCache(symbol) {
 
 function writeDayCache(symbol, series) {
   try {
-    localStorage.setItem(STORE_PREFIX + 'av:' + symbol, JSON.stringify({ day: todayStr(), series }));
+    localStorage.setItem(STORE_PREFIX + 'adj:' + symbol, JSON.stringify({ day: todayStr(), series }));
   } catch {
     /* quota / private mode — caching is best-effort */
   }
@@ -175,15 +179,15 @@ async function fetchSymbol(symbol) {
     throw new AppError(body && body.error ? body.error : `Request failed (${res.status}).`, (body && body.kind) || 'upstream');
   }
 
-  const ts = body['Time Series (Daily)'];
-  if (!ts) {
-    // Defensive: handle a proxy that passed an Alpha Vantage error body through.
-    if (body['Note'] || body['Information']) throw new AppError(body['Note'] || body['Information'], 'rate_limit');
+  const raw = body && body.series;
+  if (!Array.isArray(raw)) {
     throw new AppError(`No data returned for "${symbol}".`, 'not_found');
   }
 
-  const series = Object.entries(ts)
-    .map(([date, o]) => [parseDate(date), parseFloat(o['4. close'])])
+  // Proxy hands back [["YYYY-MM-DD", adjClose], ...] ascending; convert the
+  // date to a local-midnight timestamp for charting and ratio alignment.
+  const series = raw
+    .map(([date, c]) => [parseDate(date), Number(c)])
     .filter(([t, c]) => Number.isFinite(t) && Number.isFinite(c))
     .sort((a, b) => a[0] - b[0]);
 
@@ -429,7 +433,7 @@ function renderSummary(summary, normalize) {
     .map((s) => {
       const dir = s.pct >= 0 ? 'up' : 'down';
       const arrow = s.pct >= 0 ? '▲' : '▼';
-      const valLabel = s.type === 'ratio' ? 'ratio' : 'last close';
+      const valLabel = s.type === 'ratio' ? 'ratio' : 'adj close';
       return (
         `<div class="stat" style="border-left-color:${s.color}">` +
         `<div class="stat__name"><span class="stat__swatch" style="background:${s.color}"></span>${s.name}</div>` +
