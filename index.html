@@ -26,6 +26,9 @@
       <option value="1096">36 Months</option>
       <option value="1826">60 Months</option>
     </select>
+    <span style="margin: 0 0.5em;">or</span>
+    <label for="startDate">Start Date: </label>
+    <input type="date" id="startDate" placeholder="YYYY-MM-DD">
     <input type="submit">Fetch and Graph</button>
   </form>
   <canvas id="stockChart"></canvas>
@@ -54,14 +57,19 @@
       return fetchCache.get(symbol);
     }
 
-    async function extractPrices(apiData, range) {
+    async function extractPrices(apiData, range, startDate) {
       const labels = [];
       const prices = [];
 
       for (let date in apiData) {
+        if (startDate) {
+          // When a custom start date is set, include dates on or after it
+          if (date < startDate) break;
+        } else {
+          if (daysAgo(new Date(date)) > (range + 1)) break;
+        }
         labels.push(date);
         prices.push(parseFloat(apiData[date]['4. close']));
-        if (daysAgo(new Date(date)) > (range + 1)) break;
       }
 
       labels.reverse();
@@ -73,6 +81,7 @@
     async function fetchAndGraph() {
       const symbols = document.getElementById('symbols').value.split(',').map(symbol => symbol.trim());
       const range = parseInt(document.getElementById('range').value);
+      const startDate = document.getElementById('startDate').value || null;
 
       if (stockChart) {
         stockChart.destroy();
@@ -102,10 +111,10 @@
         if (ratio) {
           const numerData = await cachedFetch(numerator);
           let numerPrices;
-          ({ prices: numerPrices, labels } = await extractPrices(numerData, range));
+          ({ prices: numerPrices, labels } = await extractPrices(numerData, range, startDate));
           const denomData = await cachedFetch(denominator);
           let denomPrices;
-          ({ prices: denomPrices, labels } = await extractPrices(denomData, range));
+          ({ prices: denomPrices, labels } = await extractPrices(denomData, range, startDate));
           console.assert(numerPrices.length === denomPrices.length);
           prices = []
           for (let i = 0; i < denomPrices.length; i++) {
@@ -113,7 +122,7 @@
           }
         } else {
           const data = await cachedFetch(symbol);
-          ({ prices, labels } = await extractPrices(data, range));
+          ({ prices, labels } = await extractPrices(data, range, startDate));
           normalize(prices);
         }
         stockChart.data.labels = labels;
@@ -136,9 +145,31 @@
         event.preventDefault();
         fetchAndGraph();
       });
+
+      // When the user types a custom start date, dim the range dropdown
+      const rangeSelect = document.getElementById('range');
+      const startDateInput = document.getElementById('startDate');
+      startDateInput.addEventListener('input', function () {
+        if (this.value) {
+          rangeSelect.style.opacity = '0.4';
+        } else {
+          rangeSelect.style.opacity = '1';
+        }
+      });
+      // When the user changes the range dropdown, clear the custom date
+      rangeSelect.addEventListener('change', function () {
+        startDateInput.value = '';
+        rangeSelect.style.opacity = '1';
+      });
+
       const urlQuotes = getQueryParam('quotes');
       if (urlQuotes) {
         document.getElementById('symbols').value = urlQuotes;
+      }
+      const urlStart = getQueryParam('start');
+      if (urlStart) {
+        startDateInput.value = urlStart;
+        startDateInput.dispatchEvent(new Event('input'));
       }
     };
   </script>
